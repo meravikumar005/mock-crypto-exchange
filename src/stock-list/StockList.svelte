@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Svroller } from "svrollbar";
   import { type IStockList } from "./stock.interface";
+  import { TokenStore } from "../store/store";
 
   let stockList: IStockList[] = [];
   const ws = new WebSocket("wss://stream.wazirx.com/stream");
@@ -16,7 +17,9 @@
   ws.onmessage = (e) => {
     const res = JSON.parse(e.data);
     const data: IStockList[] = res.data;
-    stockList = [...stockList, ...data];
+    if (Array.isArray(data)) {
+      stockList = [...stockList, ...data];
+    }
   };
 
   const getPriceDiffPer = (stock: IStockList) => {
@@ -33,14 +36,27 @@
       return "Down";
     }
   };
+
+  const selectToken = (token: IStockList) => {
+    console.log(token);
+  };
 </script>
 
 <main class="stock-list">
   <div class="search-box">
     <input class="search-input" type="text" placeholder="Search" />
   </div>
-  <Svroller width="100%" height="95%">
-    {#each stockList.slice(0, 100) as stock}
+  <div class="list-header">
+    <div class="h-stock-name">Token</div>
+    <div class="h-stock-rate">Buy</div>
+    <div class="h-stock-rate">Sell</div>
+    <div class="h-stock-rate">High</div>
+    <div class="h-stock-rate">Low</div>
+    <div class="h-stock-rate">Open</div>
+    <div class="h-stock-rate">Action</div>
+  </div>
+  <Svroller width="100%" height="90%">
+    {#each stockList.slice(0, 300) as stock}
       <div class="stock-item">
         <div class="stock-logo">
           <img src="https://media.wazirx.com/media/{stock.u}/84.png" alt="" />
@@ -57,6 +73,22 @@
             {getPriceDiffPer(stock)}
           </p>
         </div>
+        <div class="stock-price">
+          <p class="current-rate">{stock.a}</p>
+        </div>
+        <div class="stock-price">
+          <p class="current-rate">{stock.h}</p>
+        </div>
+        <div class="stock-price">
+          <p class="current-rate">{stock.l}</p>
+        </div>
+        <div class="stock-price">
+          <p class="current-rate">{stock.o}</p>
+        </div>
+        <div class="stock-price">
+          <button class="btn-buy" on:click={() => selectToken(stock)}>Buy</button>
+          <button class="btn-sell" on:click={() => selectToken(stock)}>Sell</button>
+        </div>
       </div>
     {/each}
   </Svroller>
@@ -70,6 +102,7 @@
   .search-box {
     height: 35px;
     padding: 10px;
+    width: 50%;
   }
 
   .search-input {
@@ -85,6 +118,27 @@
 
   .search-input:focus {
     outline: none;
+  }
+
+  .list-header {
+    display: flex;
+    background-color: #1e2433;
+    align-items: center;
+    height: 50px;
+  }
+
+  .h-stock-name {
+    flex: 1;
+    max-width: 840px;
+    margin-left: 10px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .h-stock-rate {
+    width: 90px;
+    font-size: 15px;
+    font-weight: 700;
   }
 
   .stock-item {
@@ -127,7 +181,7 @@
   }
 
   .stock-price {
-    max-width: 80px;
+    width: 90px;
     font-weight: 700;
   }
 
@@ -140,7 +194,6 @@
     margin: 0;
     font-size: 10px;
     color: #999ca3;
-    float: inline-end;
   }
 
   .change-rate-down {
@@ -149,5 +202,26 @@
 
   .change-rate-up {
     color: #66c37b;
+  }
+
+  .btn-buy {
+    height: 24px;
+    background-color: rgb(240, 255, 240);
+    border-radius: 5px;
+    outline: none;
+    border: none;
+    background-color: green;
+    color: white;
+    cursor: pointer;
+  }
+
+  .btn-sell {
+    height: 24px;
+    border-radius: 5px;
+    outline: none;
+    border: none;
+    background-color: rgb(223, 17, 17);
+    color: white;
+    cursor: pointer;
   }
 </style>

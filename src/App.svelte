@@ -1,6 +1,5 @@
 <script lang="ts">
-  import StockListSidebar from "./stock-list/StockListSidebar.svelte";
-  import GraphView from "./graph-view/GraphView.svelte";
+  import StockListSidebar from "./stock-list/StockList.svelte";
   import Portfolio from "./portfolio/Portfolio.svelte";
 </script>
 
@@ -10,9 +9,6 @@
   </div>
 
   <div class="main-container">
-    <div class="graph-view">
-      <GraphView />
-    </div>
     <div class="portfolio-position">
       <Portfolio />
     </div>
@@ -24,13 +20,12 @@
     background-color: #101623;
     height: 100vh;
     display: flex;
+    flex-direction: column;
     gap: 10px;
   }
 
   .stock-list-sidebar {
-    width: 250px;
-    height: 100%;
-    min-width: 250px;
+    height: 70%;
     background-color: #2d3446;
   }
 
