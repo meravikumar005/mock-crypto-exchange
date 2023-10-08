@@ -38,4 +38,8 @@
     flex: 1 auto;
     background-color: #2d3446;
   }
+
+  .graph-view {
+    height: 60%;
+  }
 </style>
