@@ -1,50 +1,69 @@
 <script lang="ts">
-  import { TokenStore } from "../store/store";
+  import { invoke } from "@tauri-apps/api/tauri";
+  import { EventService } from "../event/event";
+  import { type IPortfolio } from "./portfolio";
+  const eventService = new EventService();
+  let tokenList:IPortfolio[] = [];
+
+  invoke("get_trade_list").then(res => {
+      const trade = res as IPortfolio[];
+      tokenList = trade;
+    })
+
+  eventService.customEvent.subscribe(data => {
+    invoke("get_trade_list").then(res => {
+      const trade = res as IPortfolio[];
+      tokenList = [...tokenList, ...trade];
+    })
+  })
+
+  const deleteTrade = (id:number) => {
+    invoke("delete_trade", { id }).then(() => {
+      let index = tokenList.findIndex(t => t.id === id);
+      tokenList.splice(index, 1);
+      tokenList = tokenList;
+    })
+  }
+
 </script>
 
 <main>
   <div class="token-info">
     <span class="portfolio-title">Portfolio</span>
   </div>
-  <div class="list-header">
-    <div class="h-stock-name">Token</div>
-    <div class="h-stock-rate">Qty</div>
-    <div class="h-stock-rate">Rate</div>
-    <div class="h-stock-rate">Type</div>
-  </div>
+
+  {#if tokenList.length > 0}
+    <div class="list-header">
+      <div class="h-stock-name">Token</div>
+      <div class="h-stock-rate">Qty</div>
+      <div class="h-stock-rate">Rate</div>
+      <div class="h-stock-rate">Type</div>
+    </div>
+  {/if}
+{#each tokenList as token}
   <div class="stock-item">
     <div class="stock-logo">
       <img src="https://media.wazirx.com/media/btcinr/84.png" alt="" />
     </div>
-    <div class="stock-name">BTC</div>
+    <div class="stock-name">{token.token.toUpperCase()}</div>
     <div class="stock-price">
-      <p class="current-rate">340</p>
+      <p class="current-rate">{token.qty}</p>
     </div>
     <div class="stock-price">
-      <p class="current-rate">125.89</p>
+      <p class="current-rate">{token.rate.toFixed(3)}</p>
     </div>
 
     <div class="stock-price">
-      <p class="current-rate token-buy">Buy</p>
+      {#if token.trade_type === "BUY"}
+        <p class="current-rate token-buy">{token.trade_type}</p>
+      {/if}
+      {#if token.trade_type === "SELL"}
+      <p class="current-rate token-sell">{token.trade_type}</p>
+    {/if}
     </div>
+    <button class="btn-sell" on:click={() => deleteTrade(token.id)}>x</button>
   </div>
-
-  <div class="stock-item">
-    <div class="stock-logo">
-      <img src="https://media.wazirx.com/media/btcinr/84.png" alt="" />
-    </div>
-    <div class="stock-name">BTC</div>
-    <div class="stock-price">
-      <p class="current-rate">200</p>
-    </div>
-    <div class="stock-price">
-      <p class="current-rate">125.89</p>
-    </div>
-
-    <div class="stock-price">
-      <p class="current-rate token-sell">Sell</p>
-    </div>
-  </div>
+{/each}
 </main>
 
 <style>
@@ -119,5 +138,16 @@
 
   .token-sell {
     color: rgb(223, 17, 17);
+  }
+
+  .btn-sell {
+    height: 22px;
+    border-radius: 5px;
+    outline: none;
+    border: none;
+    background-color: rgb(223, 17, 17);
+    color: white;
+    cursor: pointer;
+    margin-right: 5px;
   }
 </style>

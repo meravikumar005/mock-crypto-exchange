@@ -1,9 +1,13 @@
 <script lang="ts">
+  import { invoke } from "@tauri-apps/api/tauri";
   import { Svroller } from "svrollbar";
   import { type IStockList } from "./stock.interface";
-  import { TokenStore } from "../store/store";
-
+  import { TokenStore, TradeClose } from "../store/store";
+  import Trade from "../trade/Trade.svelte";
+  let showTrade = false;
   let stockList: IStockList[] = [];
+  let selectedToken: IStockList;
+  let tradeType = "BUY";
   const ws = new WebSocket("wss://stream.wazirx.com/stream");
 
   ws.addEventListener("open", () => {
@@ -37,15 +41,19 @@
     }
   };
 
-  const selectToken = (token: IStockList) => {
-    console.log(token);
+  const selectToken = (token: IStockList, type: string) => {
+    showTrade = !showTrade;
+    selectedToken = token;
+    tradeType = type;
   };
+
+  TradeClose.subscribe((d) => {
+    showTrade = d;
+    TradeClose.set(true);
+  });
 </script>
 
 <main class="stock-list">
-  <div class="search-box">
-    <input class="search-input" type="text" placeholder="Search" />
-  </div>
   <div class="list-header">
     <div class="h-stock-name">Token</div>
     <div class="h-stock-rate">Buy</div>
@@ -86,40 +94,28 @@
           <p class="current-rate">{stock.o}</p>
         </div>
         <div class="stock-price">
-          <button class="btn-buy" on:click={() => selectToken(stock)}>Buy</button>
-          <button class="btn-sell" on:click={() => selectToken(stock)}>Sell</button>
+          <button class="btn-buy" on:click={() => selectToken(stock, "BUY")}
+            >Buy</button
+          >
+          <button class="btn-sell" on:click={() => selectToken(stock, "SELL")}
+            >Sell</button
+          >
         </div>
       </div>
     {/each}
   </Svroller>
+
+  {#if !showTrade}
+    <div class="trade-view">
+      <Trade token={selectedToken} {tradeType} />
+    </div>
+  {/if}
 </main>
 
 <style>
   .stock-list {
     height: 100%;
   }
-
-  .search-box {
-    height: 35px;
-    padding: 10px;
-    width: 50%;
-  }
-
-  .search-input {
-    width: 100%;
-    height: 100%;
-    border-radius: 6px;
-    border: none;
-    padding-left: 5px;
-    font-size: 14px;
-    background-color: #1e2433;
-    color: #fff;
-  }
-
-  .search-input:focus {
-    outline: none;
-  }
-
   .list-header {
     display: flex;
     background-color: #1e2433;
@@ -156,10 +152,6 @@
   }
 
   .stock-item:hover {
-    background-color: #1a2c61;
-  }
-
-  .selected-stock {
     background-color: #1a2c61;
   }
 
@@ -223,5 +215,13 @@
     background-color: rgb(223, 17, 17);
     color: white;
     cursor: pointer;
+  }
+
+  .trade-view {
+    position: absolute;
+    position: fixed;
+    right: 0;
+    top: 105px;
+    height: calc(100vh - 105px);
   }
 </style>
